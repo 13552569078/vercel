@@ -1,157 +1,126 @@
 <template>
-  <div class="header">
-    <div class="prev btn" @click="changeLeft" v-if="prevable">前</div>
-    <div class="menu-wrap" ref="wrapRef">
-      <!-- 导航 -->
-      <div class="menu-item" v-for="(item, index) in nemuList" :key="index">{{ item }}</div>
+  <div class="main-wrap">
+    <div class="form">
+      <el-form ref="ruleFormRef" :model="formInline" class="demo-form-inline" :rules="rules">
+        <el-form-item label="图片链接" prop="imgurl">
+          <el-input v-model="formInline.imgurl" placeholder="图片链接" clearable type="textarea"
+            :autosize="{ minRows: 4, maxRows: 10 }" />
+        </el-form-item>
+        <el-form-item label="绘制区域" prop="bbox">
+          <el-input v-model="formInline.bbox" placeholder="绘制区域bbox格式为[159,973,415,995]" clearable />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="onSubmit">绘制</el-button>
+        </el-form-item>
+      </el-form>
     </div>
-    <div class="next btn" @click="changeRight" v-if="nextable">后</div>
-    <div class="logo">
-      头像等占位符
+    <div class="content">
+      <img v-if="showImage" :src="formInline.imgurl" class="image" @load="handleImageLoad" ref="imageRef" />
+      <canvas v-if="bbox.length === 4" ref="canvasRef" class="canvas"
+        style="position: absolute;left: 0;top: 0;z-index: 100;"></canvas>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { onMounted, ref, nextTick } from "vue"
+import { reactive } from 'vue'
+import type { FormInstance, FormRules } from 'element-plus'
 
-// 导航
-const nemuList = ref(Array.from({ length: 20 }, (_, index) => `测试导航${index + 1}`));
-// 上一页是否可点击
-const prevable = ref(false);
-// 下一页是否可点击
-const nextable = ref(false);
-// dom
-const wrapRef = ref();
-
-
-const changeLeft = async () => {
-  if (!prevable.value) return;
-  // 每次翻页一个
-  const dom = wrapRef.value;
-  smoothScrollTo(dom, dom.scrollLeft - 120, 300)
-  setTimeout(async () => {
-    await nextTick();
-    init()
-  }, 300);
+interface RuleForm {
+  imgurl: string
+  bbox: string
 }
 
-const changeRight = async () => {
-  if (!nextable.value) return;
-  // 每次翻页一个
-  const dom = wrapRef.value;
-  smoothScrollTo(dom, dom.scrollLeft + 120, 300)
-  setTimeout(async () => {
-    await nextTick();
-    init()
-  }, 300);
-}
-
-const init = () => {
-  const dom = wrapRef.value;
-  if (!dom) return;
-  if (dom.scrollWidth > dom.clientWidth + dom.scrollLeft + 80) {
-    nextable.value = true;
-  } else {
-    nextable.value = false;
-  }
-  // 判断是否有上一页面
-  if (dom.scrollLeft) {
-    prevable.value = true;
-  } else {
-    prevable.value = false;
-  }
-}
-
-onMounted(() => {
-  init()
+const bbox = computed(() => {
+  return formInline.bbox ? JSON.parse(formInline.bbox ) : []
 })
 
-// 定义一个函数来实现平滑滚动
-const smoothScrollTo = (element: any, targetScrollLeft: any, duration: any) => {
-  // 初始滚动位置
-  let start = element.scrollLeft;
-  let startTime: number | null = null;
+const formInline = reactive({
+  imgurl: 'http://8.130.16.234/minioapi/cestc-xingzhi-bucket/default/zzp/knowledge_base/file_paging_segment/KBbfd347a66a9d46609fec6ae1f696731f/5ffb5a8177744d70a390fe4c1ffaa44f/%E7%99%BB%E6%9C%BA%E6%9C%8D%E5%8A%A1%E5%AE%A4%E9%97%AE%E8%AE%AF%E5%91%98%E5%B2%97%E4%BD%8D%E6%89%8B%E5%86%8C%E8%AE%AD%E7%BB%83%E7%94%A8.pdf-13.png',
+  bbox: "[200,200,900,900]"
+})
+const ruleFormRef = ref<FormInstance>();
+const canvasRef = ref<HTMLCanvasElement>();
+const imageRef = ref<HTMLImageElement>();
 
-  // 动画效果的定时器
-  function scroll() {
-    // 确保startTime被设置
-    if (!startTime) startTime = performance.now();
+const showImage = ref(false);
 
-    // 计算经过的时间
-    const currentTime = performance.now();
-    const timeElapsed = currentTime - startTime;
+const rules = reactive<FormRules<RuleForm>>({
+  imgurl: [{ required: true, message: '不允许为空', trigger: 'blur' }],
+  bbox: [{ required: true, message: '不允许为空', trigger: 'blur' }]
+})
 
-    // 计算当前应该滚动到的位置
-    let progress = Math.min(timeElapsed / duration, 1);
-
-    // 使用ease-out立方贝塞尔曲线公式
-    element.scrollLeft = start + ((targetScrollLeft - start) * (1 - Math.pow(1 - progress, 3)));
-
-    // 如果动画没有结束，则继续动画
-    if (timeElapsed < duration) {
-      requestAnimationFrame(scroll);
-    }
-  }
-
-  // 开始滚动动画
-  requestAnimationFrame(scroll);
+const onSubmit = async () => {
+  await ruleFormRef.value!.validate()
+  showImage.value = false;
+  await nextTick();
+  showImage.value = true;
 }
+
+const handleImageLoad = async () => {
+  await nextTick();
+  // 没有则返回绘制
+  if (!canvasRef.value || !imageRef.value) return;
+  const { naturalWidth } = imageRef.value;
+  //   真实宽高
+  const { width } = imageRef.value.getBoundingClientRect();
+  const scaleRate = width / naturalWidth;
+  // 根据 左上角 右下角 计算出几个角坐标
+  if (bbox?.value.length === 0) return;
+  const text_region = [
+    [bbox.value![0], bbox.value![1]],
+    [bbox.value![2], bbox.value![1]],
+    [bbox.value![2], bbox.value![3]],
+    [bbox.value![0], bbox.value![3]],
+  ];
+  // 获取图片的缩放比例
+  handleDrawline(text_region as number[][], scaleRate);
+}
+
+const handleDrawline = (points: number[][], scaleRate: number) => {
+  if (canvasRef.value && imageRef.value) {
+    const canvas = canvasRef.value;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    //  真实宽高
+    const { width, height } = imageRef.value.getBoundingClientRect();
+    canvas.width = width;
+    canvas.height = height;
+    // 绘制多边形
+    ctx.beginPath();
+    ctx.moveTo(points[0][0] * scaleRate, points[0][1] * scaleRate);
+    points.forEach((point) => {
+      ctx.lineTo(point[0] * scaleRate, point[1] * scaleRate);
+    });
+    ctx.closePath();
+    // 填充多边形为黄色
+    ctx.fillStyle = "rgba(76, 192, 158, 0.15)";
+    ctx.fill();
+  }
+};
 
 </script>
 
 <style scoped lang="scss">
-* {
-  margin: 0;
-  padding: 0;
-}
-
-.header {
-  height: 50px;
-  width: 100%;
-  border: 1px solid gray;
+.main-wrap {
   display: flex;
+  padding: 20px;
+  height: 100vh;
 
-  .btn {
-    width: 50px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 1px solid salmon;
-    border-radius: 50%;
-    cursor: pointer;
-
-    &:hover {
-      color: white;
-      background-color: blue;
-    }
+  .form {
+    width: 400px;
+    margin-right: 20px;
   }
 
-  .menu-wrap {
+  .content {
     flex: 1;
-    overflow: hidden;
-    display: flex;
-    transition: all 0.4s ease-in-out;
+    border: 1px solid #aaaaaa;
+    position: relative;
+    overflow: auto;
 
-
-    .menu-item {
-      transition: all 1s ease-in-out;
-
-      width: 120px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border: 1px solid greenyellow;
-      flex-shrink: 0;
+    .image {
+      width: 100%;
+      z-index: 8;
     }
-  }
-
-  .logo {
-    width: 200px;
-    background: orange;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: white;
   }
 }
 </style>
