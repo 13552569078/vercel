@@ -3,7 +3,7 @@
     <div class="form">
       <el-form ref="ruleFormRef" :model="formInline" class="demo-form-inline" :rules="rules">
         <el-form-item label="图片链接" prop="imgurl">
-          <el-input v-model="formInline.imgurl" placeholder="图片链接" clearable type="textarea"
+          <el-input v-model="formInline.imgurl" placeholder="图片链接" :clearable="true" type="textarea"
             :autosize="{ minRows: 4, maxRows: 10 }" />
         </el-form-item>
         <el-form-item label="绘制区域" prop="bbox">
@@ -17,7 +17,7 @@
     <div class="content">
       <img v-if="showImage" :src="formInline.imgurl" class="image" @load="handleImageLoad" ref="imageRef" />
       <canvas v-if="bbox.length === 4" ref="canvasRef" class="canvas"
-        style="position: absolute;left: 0;top: 0;z-index: 100;"></canvas>
+        style="width: 100%;height: 100%;position: absolute;left: 0;top: 0;z-index: 100;"></canvas>
     </div>
   </div>
 </template>
