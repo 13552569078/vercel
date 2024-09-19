@@ -8,7 +8,7 @@ import Components from 'unplugin-vue-components/vite'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
-    base: mode !== 'serve' ? `/${env.PROD_PREFIX}` : '/',
+    // base: mode !== 'serve' ? `/${env.PROD_PREFIX}` : '/',
     plugins: [
       vue(),
       Components({
