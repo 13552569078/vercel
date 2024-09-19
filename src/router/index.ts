@@ -1,16 +1,16 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
-  history: createWebHashHistory(`/${import.meta.env.PROD_PREFIX}`),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    // {
-    //   path: '/',
-    //   name: 'Diff',
-    //   component: () => import('@/views/diff-index/index.vue'),
-    //   meta: {
-    //     title: 'diff',
-    //   },
-    // },
+    {
+      path: '/',
+      name: 'Diff',
+      component: () => import('@/views/diff-index/index.vue'),
+      meta: {
+        title: 'diff',
+      },
+    },
     {
       path: '/',
       name: 'Draw',
