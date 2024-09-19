@@ -20,7 +20,7 @@ onMounted(() => {
     const text2 = JSON.stringify(obj2, null, 2);
 
 
-    const diffString = createPatch('', text1, text2, '', '');
+    const diffString = createPatch('test2', text1, text2, '', '');
 
 
     console.dir(diffString)
