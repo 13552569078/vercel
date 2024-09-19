@@ -2,7 +2,6 @@
 import { createPatch } from 'diff'
 import { Diff2HtmlUI } from 'diff2html/lib/ui/js/diff2html-ui'
 import "diff2html/bundles/css/diff2html.min.css";
-import { parse, html } from 'diff2html'
 import { ref, onMounted } from 'vue'
 
 defineProps({
@@ -11,8 +10,65 @@ defineProps({
 const count = ref(0)
 
 onMounted(() => {
-    const obj1 = { a: 1, b: 2, c: { d: 3 } };
-    const obj2 = { a: 1, b: 3, c: { d: 4 } };
+    const obj1 = {
+        "responseId": "1737028341676815839",
+        "sessionId": "",
+        "phone": "13552569078",
+        "userName": "",
+        "responseContent": "您请注意，以上资料来源于公开数据，由AI生成内容供参考。",
+        "recommend": "",
+        "requestContent": "结婚登记",
+        "historyContent": "历史记录",
+        "responseTime": "2024-09-18 19:22:07",
+        "conversationId": "00a38ef2dfc6480c8d802b3e73fe4eff",
+        "isComment": 0,
+        "nextOptions": [
+            {
+                "id": "北京市朝阳区民政局-3",
+                "value": "北京市朝阳区民政局",
+                "level": 3
+            }
+        ],
+        "postFix": "",
+        "nodeType": "2"
+    };
+    const obj2 = {
+        "responseId": "1737028341676815840",
+        "sessionId": "",
+        "phone": "13552569078",
+        "userName": "",
+        "responseContent": "您想了解“结婚登记”哪方面的办理内容：",
+        "recommend": "",
+        "requestContent": "北京市朝阳区民政局",
+        "historyContent": "历史记录",
+        "responseTime": "2024-09-18 19:22:08",
+        "conversationId": "00a38ef2dfc6480c8d802b3e73fe4eff",
+        "isComment": 0,
+        "nextOptions": [
+            {
+                "id": "申请条件-4",
+                "value": "申请条件",
+                "level": 4
+            },
+            {
+                "id": "申请材料-4",
+                "value": "申请材料",
+                "level": 4
+            },
+            {
+                "id": "办理地点，时间及联系方式-4",
+                "value": "办理地点，时间及联系方式",
+                "level": 4
+            },
+            {
+                "id": "办理流程-4",
+                "value": "办理流程",
+                "level": 4
+            }
+        ],
+        "postFix": "\n请注意，此信息仅作参考，详细办理流程请向相关部门咨询。",
+        "nodeType": "2"
+    };
 
 
     // 将JSON对象转换为字符串进行比较  
@@ -20,15 +76,10 @@ onMounted(() => {
     const text2 = JSON.stringify(obj2, null, 2);
 
 
-    const diffString = createPatch('test2', text1, text2, '', '');
+    const diffString = createPatch('test2', text1, text2, 'oldHeader', 'newHeader');
 
 
     console.dir(diffString)
-
-    /**
-     * 1. 通过diff2html-ui生成html
-     */
-
     const targetElement = document.getElementById('myDiffElement');
     const configuration = {
         drawFileList: false,
@@ -44,26 +95,6 @@ onMounted(() => {
     const diff2htmlUi = new Diff2HtmlUI(targetElement, diffString, configuration);
     diff2htmlUi.draw();
     diff2htmlUi.highlightCode();
-
-    /**
-     * 2. 通过diff2html的parse,html生成html
-     */
-
-    const diffJson = parse(diffString)
-    const x = html(diffJson, {
-        drawFileList: false,
-        fileListToggle: false,
-        fileListStartVisible: false,
-        fileContentToggle: false,
-        matching: 'lines',
-        outputFormat: 'side-by-side',
-        synchronisedScroll: true,
-        highlight: true,
-        renderNothingWhenEmpty: false,
-    })
-    count.value = x
-
-
 })
 
 
