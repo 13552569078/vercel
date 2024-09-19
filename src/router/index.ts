@@ -6,7 +6,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'Diff',
-      component: () => import('../views/diff-index/index.vue'),
+      component: () => import('@/views/diff-index/index.vue'),
       meta: {
         title: 'diff',
       },
@@ -14,7 +14,7 @@ const router = createRouter({
     {
       path: '/draw',
       name: 'Draw',
-      component: () => import("../views/HomeView.vue"),
+      component: () => import("@/views/HomeView.vue"),
       meta: {
         title: '绘制区域',
       },
